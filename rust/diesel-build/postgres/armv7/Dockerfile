@@ -7,7 +7,7 @@
 # 	https://whitfin.io/speeding-up-rust-docker-builds/
 
 ########################## BUILD IMAGE  ##########################
-FROM rust:1.55-buster as build
+FROM rust:1.61-bullseye as build
 
 # Build time options to avoid dpkg warnings and help with reproducible builds.
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -22,28 +22,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN mkdir -pv "${CARGO_HOME}" \
     && rustup set profile minimal
 
-# NOTE: Any apt-get/dpkg after this stage MAY fail because of broken dependencies.
 #
 # Install required build libs for armhf architecture.
-# To compile postgresql we need some extra packages for both host arch and target arch
-RUN sed 's/^deb/deb-src/' /etc/apt/sources.list > /etc/apt/sources.list.d/deb-src.list \
-    && dpkg --add-architecture armhf \
+# hadolint ignore=DL3059
+RUN dpkg --add-architecture armhf \
     && apt-get update \
     && apt-get install -y \
         --no-install-recommends \
         libssl-dev:armhf \
         libc6-dev:armhf \
         libpq5:armhf \
-        libpq-dev \
+        libpq-dev:armhf \
         gcc-arm-linux-gnueabihf \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    #
-    # For Diesel-RS migrations_macros to compile with PostgreSQL we need to do some magic.
-    # The libpq5:armhf package seems to not provide a symlink to libpq.so.5 with the name libpq.so.
-    # This is only provided by the libpq-dev package which can't be installed for both arch at the same time.
-    # Without this specific file the ld command will fail and compilation fails with it.
-    && ln -sfnr /usr/lib/arm-linux-gnueabihf/libpq.so.5 /usr/lib/arm-linux-gnueabihf/libpq.so \
     #
     # Make sure cargo has the right target config
     && echo '[target.armv7-unknown-linux-gnueabihf]' >> "${CARGO_HOME}/config" \
@@ -51,10 +41,10 @@ RUN sed 's/^deb/deb-src/' /etc/apt/sources.list > /etc/apt/sources.list.d/deb-sr
     && echo 'rustflags = ["-L/usr/lib/arm-linux-gnueabihf"]' >> "${CARGO_HOME}/config"
 
 # Set arm specific environment values
-ENV CC_armv7_unknown_linux_gnueabihf="/usr/bin/arm-linux-gnueabihf-gcc"
-ENV CROSS_COMPILE="1"
-ENV OPENSSL_INCLUDE_DIR="/usr/include/arm-linux-gnueabihf"
-ENV OPENSSL_LIB_DIR="/usr/lib/arm-linux-gnueabihf"
+ENV CC_armv7_unknown_linux_gnueabihf="/usr/bin/arm-linux-gnueabihf-gcc" \
+    CROSS_COMPILE="1" \
+    OPENSSL_INCLUDE_DIR="/usr/include/arm-linux-gnueabihf" \
+    OPENSSL_LIB_DIR="/usr/lib/arm-linux-gnueabihf"
 
 
 # Creates a dummy project used to grab dependencies
