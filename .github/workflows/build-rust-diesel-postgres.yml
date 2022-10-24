@@ -33,8 +33,8 @@ jobs:
         id: docker_build
         with:
           context: ./rust/diesel-build/postgres/armv7
-          build-args:
-            RUST_VERSION: ${RUST_VERSION}
+          build-args: |
+            RUST_VERSION=${RUST_VERSION}
           tags: |
             ghcr.io/j-be/rust-diesel-postgres:${RUST_VERSION}-armv7
           push: ${{ github.ref == 'refs/heads/main' }}
