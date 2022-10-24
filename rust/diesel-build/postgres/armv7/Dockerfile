@@ -7,7 +7,8 @@
 # 	https://whitfin.io/speeding-up-rust-docker-builds/
 
 ########################## BUILD IMAGE  ##########################
-FROM rust:1.61-bullseye as build
+ARG RUST_VERSION
+FROM rust:${RUST_VERSION}-bullseye as build
 
 # Build time options to avoid dpkg warnings and help with reproducible builds.
 ENV DEBIAN_FRONTEND=noninteractive \

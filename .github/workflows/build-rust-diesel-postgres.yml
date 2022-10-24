@@ -5,6 +5,9 @@ on:
     branches:
       - "main"
 
+env:
+  RUST_VERSION: 1.64
+
 jobs:
   build-and-push-docker-image:
     name: Build Docker image and push to repositories
@@ -27,10 +30,13 @@ jobs:
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2
+        id: docker_build
         with:
           context: ./rust/diesel-build/postgres/armv7
+          build-args:
+            RUST_VERSION: ${RUST_VERSION}
           tags: |
-            ghcr.io/j-be/rust-diesel-postgres:armv7
+            ghcr.io/j-be/rust-diesel-postgres:${RUST_VERSION}-armv7
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Image digest
