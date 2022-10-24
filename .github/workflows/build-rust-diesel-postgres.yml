@@ -34,9 +34,9 @@ jobs:
         with:
           context: ./rust/diesel-build/postgres/armv7
           build-args: |
-            RUST_VERSION=${RUST_VERSION}
+            RUST_VERSION=${{ env.RUST_VERSION }}
           tags: |
-            ghcr.io/j-be/rust-diesel-postgres:${RUST_VERSION}-armv7
+            ghcr.io/j-be/rust-diesel-postgres:${{ env.RUST_VERSION }}-armv7
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Image digest
